@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎴 Buscador Pokemon TCG España</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #FFD700 0%, #FF6B35 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header h1 {
+      font-size: 2.8em;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.95;
+    }
+    
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .search-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+    }
+    
+    input[type="text"], select, input[type="range"] {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.95em;
+    }
+    
+    input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    select {
+      min-width: 140px;
+    }
+    
+    input[type="range"] {
+      flex: 1;
+      min-width: 150px;
+    }
+    
+    button {
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF4500 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .filters {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+    }
+    
+    .price-filter {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .price-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .price-input input {
+      width: 100%;
+      padding: 8px;
+    }
+    
+    .price-input label {
+      font-size: 0.9em;
+      white-space: nowrap;
+    }
+    
+    .stats {
+      background: rgba(255,255,255,0.95);
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap;
+      font-weight: bold;
+      border-left: 4px solid #FF6B35;
+    }
+    
+    .stat-item {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      color: #333;
+    }
+    
+    .sort-section {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .sort-section label {
+      font-weight: 500;
+      font-size: 0.9em;
+    }
+    
+    .sort-section select {
+      flex: 1;
+      min-width: 200px;
+    }
+    
+    .results {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    
+    .product-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      transition: all 0.3s;
+      animation: slideUp 0.5s ease-out;
+      border-top: 3px solid #FF6B35;
+    }
+    
+    .product-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+    }
+    
+    .product-image {
+      width: 100%;
+      height: 250px;
+      background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 10px;
+      background: white;
+    }
+    
+    .product-info {
+      padding: 16px;
+    }
+    
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+    
+    .product-tienda {
+      display: inline-block;
+      background: #FFD700;
+      color: #333;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+    }
+    
+    .product-estado {
+      display: inline-block;
+      background: #E8F5E9;
+      color: #2E7D32;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      font-weight: bold;
+    }
+    
+    .product-title {
+      font-weight: bold;
+      font-size: 0.95em;
+      margin-bottom: 10px;
+      color: #333;
+      line-height: 1.3;
+      min-height: 40px;
+    }
+    
+    .product-price-section {
+      margin-bottom: 10px;
+    }
+    
+    .product-price {
+      font-size: 1.6em;
+      color: #FF6B35;
+      font-weight: bold;
+    }
+    
+    .product-price-original {
+      font-size: 0.9em;
+      color: #999;
+      text-decoration: line-through;
+      margin-left: 8px;
+    }
+    
+    .product-seller {
+      font-size: 0.85em;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .product-reputation {
+      display: inline-block;
+      background: #E3F2FD;
+      color: #1976D2;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.8em;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    
+    .product-opinion {
+      background: #FFF3E0;
+      color: #E65100;
+      padding: 8px;
+      border-radius: 6px;
+      font-size: 0.8em;
+      margin-bottom: 10px;
+      border-left: 3px solid #FF6B35;
+      font-weight: 500;
+    }
+    
+    .product-details {
+      font-size: 0.8em;
+      color: #999;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .product-detail-tag {
+      background: #F5F5F5;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border-left: 2px solid #FFD700;
+    }
+    
+    .product-shipping {
+      color: #1976D2;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+    
+    .product-link {
+      display: block;
+      background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+      color: #333;
+      padding: 10px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9em;
+      font-weight: bold;
+      transition: all 0.3s;
+      text-align: center;
+    }
+    
+    .product-link:hover {
+      background: linear-gradient(135deg, #FFC700 0%, #FFB700 100%);
+      transform: scale(1.05);
+    }
+    
+    .loading {
+      text-align: center;
+      color: white;
+      font-size: 1.2em;
+      padding: 80px 20px;
+      font-weight: bold;
+      background: rgba(0,0,0,0.1);
+      border-radius: 12px;
+    }
+    
+    .loading::after {
+      content: '';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-left: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .error {
+      background: #FF6B6B;
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: 500;
+      border-left: 4px solid #FF0000;
+    }
+    
+    .no-results {
+      text-align: center;
+      color: white;
+      padding: 80px 20px;
+      font-size: 1.2em;
+      background: rgba(0,0,0,0.1);
+      border-radius: 12px;
+      border: 2px dashed white;
+    }
+    
+    .language-selector {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: white;
+      padding: 12px 18px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 100;
+    }
+    
+    .language-selector select {
+      border: none;
+      background: transparent;
+      font-weight: 500;
+      cursor: pointer;
+      font-size: 0.95em;
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 1.8em;
+      }
+      
+      .results {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .language-selector {
+        position: static;
+        margin-bottom: 20px;
+      }
+      
+      .price-filter {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="language-selector">
+    <select id="idioma" onchange="buscar()">
+      <option value="todos">🌍 Todos</option>
+      <option value="es">🇪🇸 Español</option>
+      <option value="en">🇬🇧 English</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="fr">🇫🇷 Français</option>
+      <option value="de">🇩🇪 Deutsch</option>
+      <option value="it">🇮🇹 Italiano</option>
+    </select>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <h1>🎴 Buscador Pokemon TCG</h1>
+      <p>Encuentra booster boxes, sets y cartas selladas desde España e internacional</p>
+    </div>
+    
+    <div class="controls">
+      <div class="search-row">
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Ej: Scarlet & Violet, Paldea Evolved, 151..."
+          onkeypress="if(event.key === 'Enter') buscar()"
+        >
+        <button onclick="buscar()" id="searchBtn">🔍 Buscar</button>
+      </div>
+      
+      <div class="filters">
+        <div class="price-filter">
+          <div class="price-input">
+            <label for="precioMin">Precio mín:</label>
+            <input type="number" id="precioMin" placeholder="75" min="0">
+          </div>
+          <div class="price-input">
+            <label for="precioMax">Precio máx:</label>
+            <input type="number" id="precioMax" placeholder="150" min="0">
+          </div>
+          <div></div>
+        </div>
+        
+        <div class="sort-section">
+          <label for="ordenar">Ordenar por:</label>
+          <select id="ordenar" onchange="buscar()">
+            <option value="precio-asc">💰 Menor precio</option>
+            <option value="precio-desc">💰 Mayor precio</option>
+            <option value="valoracion">⭐ Mejor valoración</option>
+          </select>
+        </div>
+        
+        <select id="tipo">
+          <option value="todos">📦 Tipo: Todo</option>
+          <option value="Booster Box">📦 Booster Box</option>
+          <option value="Set Completo">🎁 Set Completo</option>
+        </select>
+      </div>
+    </div>
+    
+    <div id="error" class="error" style="display: none;"></div>
+    <div id="loading" class="loading" style="display: none;">⏳ Buscando en 22 tiendas internacionales...</div>
+    <div id="stats" class="stats" style="display: none;"></div>
+    <div id="results" class="results"></div>
+    <di
