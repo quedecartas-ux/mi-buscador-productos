@@ -484,8 +484,14 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🎴 Buscador Pokemon TCG corriendo en http://localhost:${PORT}`);
-  console.log(`🏪 ${tiendas.length} tiendas indexadas`);
-  console.log(`📦 ${setsPokemon.length} sets disponibles\n`);
-});
+// Para desarrollo local
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`\n🎴 Buscador Pokemon TCG corriendo en http://localhost:${PORT}`);
+    console.log(`🏪 ${tiendas.length} tiendas indexadas`);
+    console.log(`📦 ${setsPokemon.length} sets disponibles\n`);
+  });
+}
+
+// Para Vercel (serverless)
+module.exports = app;
