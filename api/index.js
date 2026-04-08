@@ -1,4 +1,14 @@
-// Base de datos de sets
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, '../public')));
+
+// 🎴 BASE DE DATOS DE SETS POKEMON TCG
 const setsPokemon = [
   { 
     id: 'sv01',
@@ -62,6 +72,7 @@ const setsPokemon = [
   }
 ];
 
+// 🏪 TIENDAS REALES
 const tiendas = [
   {
     nombre: 'Cardmarket',
@@ -296,31 +307,18 @@ const tiendas = [
   }
 ];
 
-export default function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
-  );
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
-  if (req.method === 'POST') {
+// 🎴 API: BUSCAR POKEMON TCG
+app.post('/api/buscar', (req, res) => {
+  try {
     const { termino, tipo, idioma, condicion, precioMin, precioMax, ordenar } = req.body;
     
     if (!termino) {
       return res.status(400).json({ error: 'Debes ingresar un término' });
     }
 
-    console.log(`🔍 Buscando: ${termino} (${idioma})`);
+    console.log(`🔍 Buscando: ${termino}`);
 
-    // Buscar set
+    // BUSCAR EN TODOS LOS IDIOMAS DEL SET
     let setEncontrado = null;
     setEncontrado = setsPokemon.find(set => {
       const terminoLower = termino.toLowerCase();
@@ -343,7 +341,7 @@ export default function handler(req, res) {
       });
     }
 
-    // Generar productos
+    // GENERAR PRODUCTOS DESDE TODAS LAS TIENDAS
     let productosReales = [];
 
     tiendas.forEach((tienda, index) => {
@@ -360,6 +358,7 @@ export default function handler(req, res) {
       const envioNum = typeof tienda.envio === 'number' ? tienda.envio : 0;
       const precioFinal = precio + envioNum;
 
+      // OBTENER NOMBRE DEL SET EN EL IDIOMA SOLICITADO
       let nombreSet = setEncontrado.en;
       if (idioma === 'es') nombreSet = setEncontrado.es;
       else if (idioma === 'fr') nombreSet = setEncontrado.fr;
@@ -391,7 +390,7 @@ export default function handler(req, res) {
       });
     });
 
-    // Filtrar por precio
+    // FILTRAR POR PRECIO
     if (precioMin) {
       productosReales = productosReales.filter(p => p.precioFinal >= parseFloat(precioMin));
     }
@@ -399,7 +398,7 @@ export default function handler(req, res) {
       productosReales = productosReales.filter(p => p.precioFinal <= parseFloat(precioMax));
     }
 
-    // Ordenar
+    // ORDENAR
     if (ordenar === 'precio-asc') {
       productosReales.sort((a, b) => a.precioFinal - b.precioFinal);
     } else if (ordenar === 'precio-desc') {
@@ -408,7 +407,7 @@ export default function handler(req, res) {
       productosReales.sort((a, b) => b.valoracion - a.valoracion);
     }
 
-    return res.status(200).json({
+    res.json({
       success: true,
       total: productosReales.length,
       tiendas: Array.from(new Set(productosReales.map(p => p.tienda))).length,
@@ -418,7 +417,25 @@ export default function handler(req, res) {
       setBuscado: nombreSet,
       productos: productosReales
     });
-  }
 
-  res.status(405).json({ error: 'Método no permitido' });
-}
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    res.status(500).json({
+      error: 'Error en la búsqueda',
+      detalle: error.message
+    });
+  }
+});
+
+// ✅ ENDPOINT DE PRUEBA
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    mensaje: '✅ Buscador Pokemon TCG funcionando',
+    tiendas_totales: tiendas.length,
+    sets_totales: setsPokemon.length,
+    timestamp: new Date().toISOString()
+  });
+});
+
+module.exports = app;
